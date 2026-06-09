@@ -1,0 +1,43 @@
+name: SQ42 Monitor
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # toutes les 5 minutes
+  workflow_dispatch:          # déclenchement manuel possible
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Restore previous state
+        uses: actions/download-artifact@v4
+        with:
+          name: sq42-state
+          path: .
+        continue-on-error: true   # pas d'erreur lors du premier run
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run monitor check
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: python sq42_monitor.py
+
+      - name: Save state artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sq42-state
+          path: sq42_state.json
+          retention-days: 7
+          overwrite: true
