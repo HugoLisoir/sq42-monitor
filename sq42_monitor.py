@@ -61,7 +61,7 @@ def get_thumbnail_date():
             "https://cdn.robertsspaceindustries.com/static/images/SQ42_thumbnail.jpg",
             headers=HEADERS, timeout=10
         )
-        return r.headers.get("last-modified") or r.headers.get("date")
+        return r.headers.get("last-modified")
     except:
         return None
 
@@ -72,7 +72,7 @@ def get_page_date():
             "https://squadron42.com/en/",
             headers=HEADERS, timeout=10
         )
-        return r.headers.get("last-modified") or r.headers.get("date")
+        return r.headers.get("last-modified")
     except:
         return None
 
