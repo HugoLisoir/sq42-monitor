@@ -30,7 +30,7 @@ def get_build_hash():
             headers=HEADERS, timeout=10
         )
         print(f"  [build] HTTP {r.status_code} — {len(r.text)} chars")
-        match = re.search(r'main-([a-zA-Z0-9]+)\.js', r.text)
+        match = re.search(r'main-[a-zA-Z0-9_-]+\.js', r.text)
         if not match:
             print(f"  [build] Regex introuvable. Début du contenu: {r.text[:200]!r}")
         return match.group(0) if match else None
