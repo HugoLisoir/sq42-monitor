@@ -9,23 +9,13 @@ jobs:
   monitor:
     runs-on: ubuntu-latest
     permissions:
-      actions: read
-      contents: read
+      contents: write          # nécessaire pour commit + push du state
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Restore previous state
-        uses: dawidd6/action-download-artifact@v6
-        with:
-          name: sq42-state
-          path: .
-          workflow: monitor.yml
-          workflow_conclusion: any
-          if_no_artifact_found: ignore
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -40,11 +30,9 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python sq42_monitor.py
 
-      - name: Save state artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: sq42-state
-          path: sq42_state.json
-          retention-days: 7
-          overwrite: true
+      - name: Commit updated state
+        run: |
+          git config user.name "sq42-monitor[bot]"
+          git config user.email "sq42-monitor@users.noreply.github.com"
+          git add sq42_state.json
+          git diff --staged --quiet || git commit -m "chore: update state [skip ci]" && git push

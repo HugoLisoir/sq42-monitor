@@ -99,8 +99,8 @@ def get_chunks(build=None):
 
 def format_chunk_name(chunk_path):
     """'chunks/ArtemisFeatures-xgBWSBhY.js' → 'Artemis Features'"""
-    name = chunk_path.split("/")[-1]    # "ArtemisFeatures-xgBWSBhY.js"
-    name = name.rsplit("-", 1)[0]       # "ArtemisFeatures"
+    name = chunk_path.split("/")[-1]
+    name = name.rsplit("-", 1)[0]
     name = re.sub(r'([A-Z])', r' \1', name).strip()
     return name
 
@@ -113,12 +113,13 @@ def load_state():
 
 
 def save_state(state):
+    # Ne persiste que les champs utiles à la comparaison (pas checked_at)
+    persistent = {k: v for k, v in state.items() if k != "checked_at"}
     with open(STATE_FILE, "w") as f:
-        json.dump(state, f, indent=2)
+        json.dump(persistent, f, indent=2, sort_keys=True)
 
 
 def _split_text(text, max_len=4000):
-    """Découpe un texte long en blocs de max_len caractères, en coupant aux sauts de ligne."""
     lines = text.split("\n")
     parts = []
     current = []
@@ -170,7 +171,7 @@ def check_and_compare():
         "navigation": get_navigation(),
         "thumbnail_date": get_thumbnail_date(),
         "page_date": get_page_date(),
-        "chunks": list(get_chunks(build)),
+        "chunks": sorted(get_chunks(build)),
         "checked_at": datetime.now().isoformat()
     }
 
@@ -263,11 +264,10 @@ def check_and_compare():
         color = 0xff0000 if urgent else 0xf39c12
         title = "🚨 ANNONCE IMMINENTE ?" if urgent else "🔔 Changement détecté sur SQ42"
         send_discord(title, description, color=color, urgent=urgent)
+        save_state(current)
         print(f"CHANGEMENT DÉTECTÉ — {len(changes)} modification(s) !")
     else:
         print(f"  Aucun changement. Build: {current['build']} | Root: {curr_nav.get('root')} | Bouton: {curr_nav.get('button')}")
-
-    save_state(current)
 
 
 if __name__ == "__main__":
