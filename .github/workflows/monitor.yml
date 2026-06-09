@@ -14,11 +14,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Restore previous state
-        uses: actions/download-artifact@v4
+        uses: dawidd6/action-download-artifact@v6
         with:
           name: sq42-state
           path: .
-        continue-on-error: true   # pas d'erreur lors du premier run
+          workflow: monitor.yml
+          workflow_conclusion: any
+          if_no_artifact_found: ignore
 
       - name: Set up Python
         uses: actions/setup-python@v5

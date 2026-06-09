@@ -29,9 +29,13 @@ def get_build_hash():
             "https://static.squadron42.com/plt-client/plt-client.es.js",
             headers=HEADERS, timeout=10
         )
+        print(f"  [build] HTTP {r.status_code} — {len(r.text)} chars")
         match = re.search(r'main-([a-zA-Z0-9]+)\.js', r.text)
+        if not match:
+            print(f"  [build] Regex introuvable. Début du contenu: {r.text[:200]!r}")
         return match.group(0) if match else None
-    except:
+    except Exception as e:
+        print(f"  [build] Erreur: {e}")
         return None
 
 
@@ -78,14 +82,18 @@ def get_chunks(build=None):
         if not build:
             build = get_build_hash()
         if not build:
+            print("  [chunks] Pas de build hash, chunks ignorés.")
             return set()
         r = requests.get(
             f"https://static.squadron42.com/plt-client/assets/{build}",
             headers=HEADERS, timeout=15
         )
+        print(f"  [chunks] HTTP {r.status_code} — {len(r.text)} chars")
         chunks = re.findall(r'chunks/[A-Z][a-zA-Z]+-[a-zA-Z0-9_-]+\.js', r.text)
+        print(f"  [chunks] {len(chunks)} chunks trouvés")
         return set(chunks)
-    except:
+    except Exception as e:
+        print(f"  [chunks] Erreur: {e}")
         return set()
 
 
