@@ -97,10 +97,15 @@ def get_chunks(build=None):
         return set()
 
 
+def chunk_component_name(chunk_path):
+    """'chunks/ArtemisFeatures-xgBWSBhY.js' → 'ArtemisFeatures' (clé de comparaison sans hash)"""
+    name = chunk_path.split("/")[-1]
+    return name.rsplit("-", 1)[0]
+
+
 def format_chunk_name(chunk_path):
     """'chunks/ArtemisFeatures-xgBWSBhY.js' → 'Artemis Features'"""
-    name = chunk_path.split("/")[-1]
-    name = name.rsplit("-", 1)[0]
+    name = chunk_component_name(chunk_path)
     name = re.sub(r'([A-Z])', r' \1', name).strip()
     return name
 
@@ -242,22 +247,26 @@ def check_and_compare():
             f"  Après: `{current['page_date']}`"
         )
 
-    prev_chunks = set(previous.get("chunks", []))
-    curr_chunks = set(current["chunks"])
-    new_chunks = curr_chunks - prev_chunks
-    removed_chunks = prev_chunks - curr_chunks
+    prev_names = {chunk_component_name(c) for c in previous.get("chunks", [])}
+    curr_names = {chunk_component_name(c) for c in current["chunks"]}
+    truly_new = curr_names - prev_names
+    truly_removed = prev_names - curr_names
+    rehashed = len(curr_names) - len(truly_new)
 
-    if new_chunks:
-        lines = [f"✨ **{len(new_chunks)} nouveaux chunks JS**\n"]
-        for c in sorted(new_chunks):
-            lines.append(f"• {format_chunk_name(c)}")
+    if truly_new:
+        lines = [f"✨ **{len(truly_new)} nouveau(x) composant(s)**\n"]
+        for name in sorted(truly_new):
+            lines.append(f"• {re.sub(r'([A-Z])', r' \\1', name).strip()}")
         changes.append("\n".join(lines))
 
-    if removed_chunks:
-        lines = [f"🗑️ **{len(removed_chunks)} chunks supprimés**\n"]
-        for c in sorted(removed_chunks):
-            lines.append(f"• {format_chunk_name(c)}")
+    if truly_removed:
+        lines = [f"🗑️ **{len(truly_removed)} composant(s) supprimé(s)**\n"]
+        for name in sorted(truly_removed):
+            lines.append(f"• {re.sub(r'([A-Z])', r' \\1', name).strip()}")
         changes.append("\n".join(lines))
+
+    if current["build"] != previous.get("build") and rehashed > 0 and not truly_new and not truly_removed:
+        changes.append(f"_({rehashed} composants rehashés — même contenu)_")
 
     if changes:
         description = "\n\n".join(changes)
