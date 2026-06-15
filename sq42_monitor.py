@@ -256,13 +256,15 @@ def check_and_compare():
     if truly_new:
         lines = [f"✨ **{len(truly_new)} nouveau(x) composant(s)**\n"]
         for name in sorted(truly_new):
-            lines.append(f"• {re.sub(r'([A-Z])', r' \\1', name).strip()}")
+            display = re.sub(r'([A-Z])', r' \1', name).strip()
+            lines.append(f"• {display}")
         changes.append("\n".join(lines))
 
     if truly_removed:
         lines = [f"🗑️ **{len(truly_removed)} composant(s) supprimé(s)**\n"]
         for name in sorted(truly_removed):
-            lines.append(f"• {re.sub(r'([A-Z])', r' \\1', name).strip()}")
+            display = re.sub(r'([A-Z])', r' \1', name).strip()
+            lines.append(f"• {display}")
         changes.append("\n".join(lines))
 
     if current["build"] != previous.get("build") and rehashed > 0 and not truly_new and not truly_removed:
