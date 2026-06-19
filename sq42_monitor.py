@@ -100,7 +100,7 @@ def get_chunks(build=None):
 def chunk_component_name(chunk_path):
     """'chunks/ArtemisFeatures-xgBWSBhY.js' → 'ArtemisFeatures' (clé de comparaison sans hash)"""
     name = chunk_path.split("/")[-1]
-    return name.rsplit("-", 1)[0]
+    return name.split("-", 1)[0]
 
 
 def format_chunk_name(chunk_path):
@@ -197,22 +197,15 @@ def check_and_compare():
         print("Premier état sauvegardé — monitoring actif !")
         return
 
-    changes = []
     urgent = False
-
-    if current["build"] != previous.get("build"):
-        changes.append(
-            f"🔨 **Nouveau build détecté !**\n"
-            f"  Avant: `{previous.get('build')}`\n"
-            f"  Après: `{current['build']}`"
-        )
+    structural = []  # changements qui méritent une notification
 
     prev_nav = previous.get("navigation") or {}
     curr_nav = current["navigation"] or {}
 
     if curr_nav.get("root") != prev_nav.get("root"):
         urgent = True
-        changes.append(
+        structural.append(
             f"🚨 **ROOT DE NAVIGATION CHANGÉ !**\n"
             f"  Avant: `{prev_nav.get('root')}`\n"
             f"  Après: `{curr_nav.get('root')}`"
@@ -220,28 +213,28 @@ def check_and_compare():
 
     if curr_nav.get("button") != prev_nav.get("button"):
         urgent = True
-        changes.append(
+        structural.append(
             f"🚨 **BOUTON CHANGÉ !**\n"
             f"  Avant: `{prev_nav.get('button')}`\n"
             f"  Après: `{curr_nav.get('button')}`"
         )
 
     if curr_nav.get("children") != prev_nav.get("children"):
-        changes.append(
+        structural.append(
             f"📋 **Sections de navigation changées !**\n"
             f"  Avant: `{prev_nav.get('children')}`\n"
             f"  Après: `{curr_nav.get('children')}`"
         )
 
     if current["thumbnail_date"] != previous.get("thumbnail_date"):
-        changes.append(
+        structural.append(
             f"🖼️ **Thumbnail mise à jour !**\n"
             f"  Avant: `{previous.get('thumbnail_date')}`\n"
             f"  Après: `{current['thumbnail_date']}`"
         )
 
     if current["page_date"] != previous.get("page_date"):
-        changes.append(
+        structural.append(
             f"📄 **Page principale modifiée !**\n"
             f"  Avant: `{previous.get('page_date')}`\n"
             f"  Après: `{current['page_date']}`"
@@ -251,34 +244,39 @@ def check_and_compare():
     curr_names = {chunk_component_name(c) for c in current["chunks"]}
     truly_new = curr_names - prev_names
     truly_removed = prev_names - curr_names
-    rehashed = len(curr_names) - len(truly_new)
 
     if truly_new:
         lines = [f"✨ **{len(truly_new)} nouveau(x) composant(s)**\n"]
         for name in sorted(truly_new):
             display = re.sub(r'([A-Z])', r' \1', name).strip()
             lines.append(f"• {display}")
-        changes.append("\n".join(lines))
+        structural.append("\n".join(lines))
 
     if truly_removed:
         lines = [f"🗑️ **{len(truly_removed)} composant(s) supprimé(s)**\n"]
         for name in sorted(truly_removed):
             display = re.sub(r'([A-Z])', r' \1', name).strip()
             lines.append(f"• {display}")
-        changes.append("\n".join(lines))
+        structural.append("\n".join(lines))
 
-    if current["build"] != previous.get("build") and rehashed > 0 and not truly_new and not truly_removed:
-        changes.append(f"_({rehashed} composants rehashés — même contenu)_")
-
-    if changes:
-        description = "\n\n".join(changes)
+    if structural:
+        # Build en contexte si applicable
+        build_changed = current["build"] != previous.get("build")
+        if build_changed:
+            header = f"🔨 **Build** `{previous.get('build')}` → `{current['build']}`"
+            description = header + "\n\n" + "\n\n".join(structural)
+        else:
+            description = "\n\n".join(structural)
         color = 0xff0000 if urgent else 0xf39c12
         title = "🚨 ANNONCE IMMINENTE ?" if urgent else "🔔 Changement détecté sur SQ42"
         send_discord(title, description, color=color, urgent=urgent)
         save_state(current)
-        print(f"CHANGEMENT DÉTECTÉ — {len(changes)} modification(s) !")
+        print(f"CHANGEMENT STRUCTUREL — {len(structural)} modification(s) !")
     else:
-        print(f"  Aucun changement. Build: {current['build']} | Root: {curr_nav.get('root')} | Bouton: {curr_nav.get('button')}")
+        build_info = f"Build: {current['build']}"
+        if current["build"] != previous.get("build"):
+            build_info += " (rebuild pur — silence)"
+        print(f"  Aucun changement structurel. {build_info} | Root: {curr_nav.get('root')} | Bouton: {curr_nav.get('button')}")
 
 
 if __name__ == "__main__":
