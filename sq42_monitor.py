@@ -1,14 +1,26 @@
 #!/usr/bin/env python3
 """
-SQ42 Monitor — Surveille squadron42.com et envoie un résumé sur Discord
-Conçu pour tourner via GitHub Actions (single-run, cron toutes les 5 min)
+SQ42 Monitor — Surveille squadron42.com / RSI et ne poste sur Discord QUE
+lorsqu'un signal réellement significatif apparaît (pas les rebuilds techniques).
+
+Signaux qui déclenchent un post (sinon : silence, mémoire mise à jour) :
+  1. Le hash SHA-256 du CONTENU de SQ42_thumbnail.jpg change.
+  2. Un nouveau namespace de contenu (./en/*.json) apparaît (total > 36 ou nouveau artemis*).
+  3. La route https://robertsspaceindustries.com/en/artemis passe de 404 à 200.
+  4. Un composant au préfixe entièrement nouveau apparaît dans le bundle.
+
+Bruit ignoré silencieusement : nom de main-XXXX.js qui change à contenu identique,
+version RSI qui monte, thumbnail ré-uploadée à contenu identique, rehash de chunks.
+
+Conçu pour tourner via GitHub Actions (single-run, cron). État mémorisé dans
+sq42_state.json (committé par le workflow).
 """
 
 import requests
 import json
 import re
 import os
-import time
+import hashlib
 from datetime import datetime
 
 # ============================================================
@@ -16,6 +28,35 @@ from datetime import datetime
 # ============================================================
 DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")
 STATE_FILE = "sq42_state.json"
+SCHEMA_VERSION = 2
+
+# Référence de contenu connue de la thumbnail (sert de base si mémoire absente)
+THUMBNAIL_REFERENCE_SHA = "b1a9c8020d8ade73b5356ce8070f7e727d696fe05716cc7bd23168585b412edb"
+NAMESPACE_BASELINE_COUNT = 36  # nombre de namespaces ./en/*.json de référence
+
+ARTEMIS_ROUTE = "https://robertsspaceindustries.com/en/artemis"
+
+# Messages-types (aucune mention @here / @everyone)
+MSG_THUMBNAIL = (
+    "🛰️ L'image de partage officielle de Squadron 42 vient de changer pour la "
+    "première fois depuis des mois. C'est souvent le genre de détail qui précède "
+    "une annonce. On surveille."
+)
+MSG_NAMESPACE = (
+    "📄 Du nouveau contenu vient d'apparaître dans le code du site Squadron 42 "
+    "(un élément qui n'existait pas avant). L'infrastructure de la page bouge. "
+    "À suivre de près."
+)
+MSG_ARTEMIS_ROUTE = (
+    "🚨 La page \"Artemis\" du site — restée inaccessible (erreur 404) depuis des "
+    "mois — vient de répondre pour la première fois. C'est l'interrupteur qu'on "
+    "attendait. Quelque chose se prépare, maintenant."
+)
+MSG_NEW_COMPONENT = (
+    "🔧 Un nouvel élément inconnu vient d'être ajouté à la structure du site "
+    "Squadron 42. Pas encore de contenu visible, mais c'est un mouvement "
+    "inhabituel. On garde un œil dessus."
+)
 # ============================================================
 
 HEADERS = {
@@ -23,93 +64,93 @@ HEADERS = {
 }
 
 
-def get_build_hash():
+# ------------------------------------------------------------
+# Collecte
+# ------------------------------------------------------------
+def get_build_name():
+    """Relit toujours plt-client.es.js d'abord pour connaître le build réellement en ligne."""
     try:
         r = requests.get(
             "https://static.squadron42.com/plt-client/plt-client.es.js",
             headers=HEADERS, timeout=10
         )
-        print(f"  [build] HTTP {r.status_code} — {len(r.text)} chars")
         match = re.search(r'main-[a-zA-Z0-9_-]+\.js', r.text)
         if not match:
-            print(f"  [build] Regex introuvable. Début du contenu: {r.text[:200]!r}")
-        return match.group(0) if match else None
+            print(f"  [build] Regex introuvable. Contenu: {r.text[:200]!r}")
+            return None
+        print(f"  [build] {match.group(0)}")
+        return match.group(0)
     except Exception as e:
         print(f"  [build] Erreur: {e}")
         return None
 
 
-def get_navigation():
+def get_bundle(build):
+    """Télécharge le bundle applicatif principal (main-XXXX.js)."""
+    if not build:
+        return None
     try:
         r = requests.get(
-            "https://static.robertsspaceindustries.com/nav/en/sq42.mrcwfzg488ep3-1772467486.json",
-            headers=HEADERS, timeout=10
+            f"https://static.squadron42.com/plt-client/assets/{build}",
+            headers=HEADERS, timeout=20
         )
-        data = r.json()
-        return {
-            "root": data.get("root"),
-            "button": data.get("tools", {}).get("enlist-now-link", {}).get("title"),
-            "children": data.get("nodes", {}).get("squadron-42-game-page-simple", {}).get("children", [])
-        }
-    except:
+        print(f"  [bundle] HTTP {r.status_code} — {len(r.text)} chars")
+        return r.text if r.status_code == 200 else None
+    except Exception as e:
+        print(f"  [bundle] Erreur: {e}")
         return None
 
 
-def get_thumbnail_date():
+def extract_namespaces(bundle):
+    """Namespaces de contenu ./en/*.json (camelCase minuscule uniquement)."""
+    ns = set(re.findall(r'en/([a-z][a-zA-Z0-9]*)\.json', bundle))
+    print(f"  [namespaces] {len(ns)} trouvés")
+    return sorted(ns)
+
+
+def extract_prefixes(bundle):
+    """Préfixe (premier mot CamelCase) de chaque composant chunk."""
+    chunks = re.findall(r'chunks/[A-Z][a-zA-Z]+-[a-zA-Z0-9_-]+\.js', bundle)
+    names = {c.split("/")[-1].split("-", 1)[0] for c in chunks}
+    prefixes = set()
+    for name in names:
+        m = re.match(r'[A-Z][a-z0-9]*', name)
+        prefixes.add(m.group(0) if m else name)
+    print(f"  [prefixes] {len(prefixes)} préfixes / {len(names)} composants")
+    return sorted(prefixes)
+
+
+def get_thumbnail_sha256():
+    """Hash SHA-256 du CONTENU de la thumbnail (pas sa date ni son nom)."""
     try:
-        r = requests.head(
+        r = requests.get(
             "https://cdn.robertsspaceindustries.com/static/images/SQ42_thumbnail.jpg",
             headers=HEADERS, timeout=10
         )
-        return r.headers.get("last-modified")
-    except:
-        return None
-
-
-def get_page_date():
-    try:
-        r = requests.head(
-            "https://squadron42.com/en/",
-            headers=HEADERS, timeout=10
-        )
-        return r.headers.get("last-modified")
-    except:
-        return None
-
-
-def get_chunks(build=None):
-    try:
-        if not build:
-            build = get_build_hash()
-        if not build:
-            print("  [chunks] Pas de build hash, chunks ignorés.")
-            return set()
-        r = requests.get(
-            f"https://static.squadron42.com/plt-client/assets/{build}",
-            headers=HEADERS, timeout=15
-        )
-        print(f"  [chunks] HTTP {r.status_code} — {len(r.text)} chars")
-        chunks = re.findall(r'chunks/[A-Z][a-zA-Z]+-[a-zA-Z0-9_-]+\.js', r.text)
-        print(f"  [chunks] {len(chunks)} chunks trouvés")
-        return set(chunks)
+        if r.status_code != 200 or not r.content:
+            return None
+        h = hashlib.sha256(r.content).hexdigest()
+        print(f"  [thumbnail] {h[:16]}…")
+        return h
     except Exception as e:
-        print(f"  [chunks] Erreur: {e}")
-        return set()
+        print(f"  [thumbnail] Erreur: {e}")
+        return None
 
 
-def chunk_component_name(chunk_path):
-    """'chunks/ArtemisFeatures-xgBWSBhY.js' → 'ArtemisFeatures' (clé de comparaison sans hash)"""
-    name = chunk_path.split("/")[-1]
-    return name.split("-", 1)[0]
+def get_artemis_route_status():
+    """Statut HTTP de la route Artemis (404 aujourd'hui, on guette le 200)."""
+    try:
+        r = requests.get(ARTEMIS_ROUTE, headers=HEADERS, timeout=15, allow_redirects=True)
+        print(f"  [route artemis] HTTP {r.status_code}")
+        return r.status_code
+    except Exception as e:
+        print(f"  [route artemis] Erreur: {e}")
+        return None
 
 
-def format_chunk_name(chunk_path):
-    """'chunks/ArtemisFeatures-xgBWSBhY.js' → 'Artemis Features'"""
-    name = chunk_component_name(chunk_path)
-    name = re.sub(r'([A-Z])', r' \1', name).strip()
-    return name
-
-
+# ------------------------------------------------------------
+# État
+# ------------------------------------------------------------
 def load_state():
     if os.path.exists(STATE_FILE):
         with open(STATE_FILE, "r") as f:
@@ -118,170 +159,128 @@ def load_state():
 
 
 def save_state(state):
-    # Ne persiste que les champs utiles à la comparaison (pas checked_at)
-    persistent = {k: v for k, v in state.items() if k != "checked_at"}
     with open(STATE_FILE, "w") as f:
-        json.dump(persistent, f, indent=2, sort_keys=True)
+        json.dump(state, f, indent=2, sort_keys=True)
 
 
-def _split_text(text, max_len=4000):
-    lines = text.split("\n")
-    parts = []
-    current = []
-    current_len = 0
-    for line in lines:
-        if current_len + len(line) + 1 > max_len and current:
-            parts.append("\n".join(current))
-            current = []
-            current_len = 0
-        current.append(line)
-        current_len += len(line) + 1
-    if current:
-        parts.append("\n".join(current))
-    return parts
-
-
-def send_discord(title, description, color=0x00ff00, urgent=False):
+def send_discord(message):
+    """Poste un simple message texte (aucune mention)."""
     if not DISCORD_WEBHOOK_URL:
-        print("DISCORD_WEBHOOK_URL non configuré — notification ignorée.")
+        print("DISCORD_WEBHOOK_URL non configuré — post ignoré.")
         return
-
-    content = "@everyone 🚨 CHANGEMENT DÉTECTÉ SUR SQUADRON42.COM 🚨" if urgent else ""
-    parts = _split_text(description) if len(description) > 4000 else [description]
-
-    for i, part in enumerate(parts):
-        payload = {
-            "content": content if i == 0 else "",
-            "embeds": [{
-                "title": title if i == 0 else f"{title} (suite {i + 1})",
-                "description": part,
-                "color": color,
-                "footer": {"text": f"sq42-monitor • {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"}
-            }]
-        }
-        try:
-            requests.post(DISCORD_WEBHOOK_URL, json=payload, timeout=10)
-        except Exception as e:
-            print(f"Erreur Discord: {e}")
-        if i < len(parts) - 1:
-            time.sleep(0.5)
+    try:
+        requests.post(DISCORD_WEBHOOK_URL, json={"content": message}, timeout=10)
+    except Exception as e:
+        print(f"Erreur Discord: {e}")
 
 
-def check_and_compare():
-    print(f"[{datetime.now().strftime('%H:%M:%S')}] Vérification en cours...")
+# ------------------------------------------------------------
+# Logique principale
+# ------------------------------------------------------------
+def collect(previous):
+    """Collecte l'état courant. En cas d'échec réseau sur un champ, on reporte
+    la valeur précédente pour ne pas corrompre la base (évite les faux positifs)."""
+    build = get_build_name()
+    bundle = get_bundle(build)
 
-    build = get_build_hash()
-    current = {
-        "build": build,
-        "navigation": get_navigation(),
-        "thumbnail_date": get_thumbnail_date(),
-        "page_date": get_page_date(),
-        "chunks": sorted(get_chunks(build)),
-        "checked_at": datetime.now().isoformat()
+    if bundle is not None:
+        main_sha = hashlib.sha256(bundle.encode("utf-8", "ignore")).hexdigest()
+        namespaces = extract_namespaces(bundle)
+        prefixes = extract_prefixes(bundle)
+    else:
+        print("  [collect] Bundle indisponible — champs bundle reportés depuis la mémoire.")
+        main_sha = previous.get("main_sha256")
+        namespaces = previous.get("namespaces", [])
+        prefixes = previous.get("prefixes", [])
+
+    thumb = get_thumbnail_sha256() or previous.get("thumbnail_sha256")
+    artemis_status = get_artemis_route_status()
+    if artemis_status is None:
+        artemis_status = previous.get("artemis_route_status")
+
+    return {
+        "schema": SCHEMA_VERSION,
+        "build_name": build or previous.get("build_name"),
+        "main_sha256": main_sha,
+        "thumbnail_sha256": thumb,
+        "namespaces": namespaces,
+        "prefixes": prefixes,
+        "artemis_route_status": artemis_status,
+        "checked_at": datetime.now().isoformat(),
     }
 
-    previous = load_state()
 
-    if not previous:
+def detect_signals(previous, current):
+    """Retourne la liste des messages à poster (vide = silence)."""
+    signals = []
+
+    # --- Cas 1 : thumbnail (contenu) ---
+    base_thumb = previous.get("thumbnail_sha256") or THUMBNAIL_REFERENCE_SHA
+    if current["thumbnail_sha256"] and current["thumbnail_sha256"] != base_thumb:
+        signals.append(MSG_THUMBNAIL)
+
+    # --- Cas 2 : nouveau namespace de contenu ---
+    # (garde-fou : ne compare que si une base non vide existe)
+    prev_ns = set(previous.get("namespaces", []))
+    curr_ns = set(current["namespaces"])
+    if prev_ns:
+        added_ns = curr_ns - prev_ns
+        new_artemis = {n for n in added_ns if n.lower().startswith("artemis")}
+        if added_ns and (len(curr_ns) > NAMESPACE_BASELINE_COUNT or new_artemis):
+            detail = ", ".join(sorted(added_ns))
+            signals.append(f"{MSG_NAMESPACE}\n`+ namespace : {detail} (total {len(curr_ns)})`")
+
+    # --- Cas 3 : route Artemis 404 → 200 ---
+    # (ne déclenche que depuis un statut de base réel non-200, ex. 404)
+    prev_status = previous.get("artemis_route_status")
+    if current["artemis_route_status"] == 200 and prev_status not in (None, 200):
+        signals.append(MSG_ARTEMIS_ROUTE)
+
+    # --- Cas 4 : préfixe de composant entièrement nouveau ---
+    prev_prefixes = set(previous.get("prefixes", []))
+    if prev_prefixes:
+        new_prefixes = set(current["prefixes"]) - prev_prefixes
+        if new_prefixes:
+            detail = ", ".join(sorted(new_prefixes))
+            signals.append(f"{MSG_NEW_COMPONENT}\n`+ préfixe inédit : {detail}`")
+
+    return signals
+
+
+def check():
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] Vérification…")
+    previous = load_state()
+    current = collect(previous)
+
+    # Migration / premier run : établir la base en silence (une seule confirmation).
+    if previous.get("schema") != SCHEMA_VERSION:
         save_state(current)
-        nav = current["navigation"] or {}
         send_discord(
-            "🟢 SQ42 Monitor démarré",
-            f"**Build:** `{current['build']}`\n"
-            f"**Navigation root:** `{nav.get('root', 'N/A')}`\n"
-            f"**Bouton:** `{nav.get('button', 'N/A')}`\n"
-            f"**Thumbnail:** {current['thumbnail_date']}\n"
-            f"**Chunks:** {len(current['chunks'])} composants surveillés",
-            color=0x3498db
+            "✅ Surveillance Squadron 42 mise à jour — nouvelle logique anti-bruit active.\n"
+            f"Référence : thumbnail `{(current['thumbnail_sha256'] or '?')[:12]}…`, "
+            f"{len(current['namespaces'])} namespaces de contenu, "
+            f"route /en/artemis en `{current['artemis_route_status']}`.\n"
+            "Le bot ne postera désormais que pour un vrai signal."
         )
-        print("Premier état sauvegardé — monitoring actif !")
+        print("Base v2 établie — silence.")
         return
 
-    urgent = False
-    structural = []  # changements qui méritent une notification
+    signals = detect_signals(previous, current)
 
-    prev_nav = previous.get("navigation") or {}
-    curr_nav = current["navigation"] or {}
-
-    if curr_nav.get("root") != prev_nav.get("root"):
-        urgent = True
-        structural.append(
-            f"🚨 **ROOT DE NAVIGATION CHANGÉ !**\n"
-            f"  Avant: `{prev_nav.get('root')}`\n"
-            f"  Après: `{curr_nav.get('root')}`"
-        )
-
-    if curr_nav.get("button") != prev_nav.get("button"):
-        urgent = True
-        structural.append(
-            f"🚨 **BOUTON CHANGÉ !**\n"
-            f"  Avant: `{prev_nav.get('button')}`\n"
-            f"  Après: `{curr_nav.get('button')}`"
-        )
-
-    if curr_nav.get("children") != prev_nav.get("children"):
-        structural.append(
-            f"📋 **Sections de navigation changées !**\n"
-            f"  Avant: `{prev_nav.get('children')}`\n"
-            f"  Après: `{curr_nav.get('children')}`"
-        )
-
-    if current["thumbnail_date"] != previous.get("thumbnail_date"):
-        structural.append(
-            f"🖼️ **Thumbnail mise à jour !**\n"
-            f"  Avant: `{previous.get('thumbnail_date')}`\n"
-            f"  Après: `{current['thumbnail_date']}`"
-        )
-
-    if current["page_date"] != previous.get("page_date"):
-        structural.append(
-            f"📄 **Page principale modifiée !**\n"
-            f"  Avant: `{previous.get('page_date')}`\n"
-            f"  Après: `{current['page_date']}`"
-        )
-
-    prev_names = {chunk_component_name(c) for c in previous.get("chunks", [])}
-    curr_names = {chunk_component_name(c) for c in current["chunks"]}
-    truly_new = curr_names - prev_names
-    truly_removed = prev_names - curr_names
-
-    if truly_new:
-        lines = [f"✨ **{len(truly_new)} nouveau(x) composant(s)**\n"]
-        for name in sorted(truly_new):
-            display = re.sub(r'([A-Z])', r' \1', name).strip()
-            lines.append(f"• {display}")
-        structural.append("\n".join(lines))
-
-    if truly_removed:
-        lines = [f"🗑️ **{len(truly_removed)} composant(s) supprimé(s)**\n"]
-        for name in sorted(truly_removed):
-            display = re.sub(r'([A-Z])', r' \1', name).strip()
-            lines.append(f"• {display}")
-        structural.append("\n".join(lines))
-
-    if structural:
-        # Build en contexte si applicable
-        build_changed = current["build"] != previous.get("build")
-        if build_changed:
-            header = f"🔨 **Build** `{previous.get('build')}` → `{current['build']}`"
-            description = header + "\n\n" + "\n\n".join(structural)
-        else:
-            description = "\n\n".join(structural)
-        color = 0xff0000 if urgent else 0xf39c12
-        title = "🚨 ANNONCE IMMINENTE ?" if urgent else "🔔 Changement détecté sur SQ42"
-        send_discord(title, description, color=color, urgent=urgent)
-        save_state(current)
-        print(f"CHANGEMENT STRUCTUREL — {len(structural)} modification(s) !")
+    if signals:
+        for msg in signals:
+            send_discord(msg)
+        print(f"SIGNAL(S) détecté(s) : {len(signals)} — post(s) envoyé(s).")
     else:
-        build_info = f"Build: {current['build']}"
-        if current["build"] != previous.get("build"):
-            build_info += " (rebuild pur — silence)"
-        print(f"  Aucun changement structurel. {build_info} | Root: {curr_nav.get('root')} | Bouton: {curr_nav.get('button')}")
+        print("  Aucun signal significatif — bruit technique ignoré, mémoire à jour.")
+
+    # On met toujours la base à jour (un signal ne se re-poste pas à chaque run).
+    save_state(current)
 
 
 if __name__ == "__main__":
     print("=" * 50)
-    print("SQ42 Monitor — GitHub Actions Edition")
-    print(f"Webhook Discord: {'✅ Configuré' if DISCORD_WEBHOOK_URL else '❌ MANQUANT (variable DISCORD_WEBHOOK_URL)'}")
+    print("SQ42 Monitor — détection de signaux significatifs")
+    print(f"Webhook Discord: {'✅ Configuré' if DISCORD_WEBHOOK_URL else '❌ MANQUANT'}")
     print("=" * 50)
-    check_and_compare()
+    check()
