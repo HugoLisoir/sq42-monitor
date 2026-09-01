@@ -1,8 +1,8 @@
 {
   "artemis_route_status": 404,
-  "build_name": "main-_4YOCX_h.js",
-  "checked_at": "2026-09-01T14:54:45.561338",
-  "main_sha256": "24b4d69df1530f4df9bc0626fe5c2e508560530803309b62e0ec703ab49871fa",
+  "build_name": "main-CJUscQ8A.js",
+  "checked_at": "2026-09-01T15:09:22.222503",
+  "main_sha256": "156bce633233fe04f919094472438a1edf3bdd12c3286ba4bbfb8075c952898c",
   "namespaces": [
     "account",
     "accountDashboard",
