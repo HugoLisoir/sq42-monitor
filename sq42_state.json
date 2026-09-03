@@ -1,7 +1,7 @@
 {
-  "artemis_route_status": 404,
+  "artemis_route_status": 403,
   "build_name": "main-CgU2rs4e.js",
-  "checked_at": "2026-09-03T20:52:05.268007",
+  "checked_at": "2026-09-03T21:00:20.202837",
   "main_sha256": "1e3b78ff3f7d7d9a20ac126c9024f9fb80c6854ca7cbc4a52a8b38c74776096c",
   "namespaces": [
     "account",
