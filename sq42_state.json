@@ -1,7 +1,7 @@
 {
-  "artemis_route_status": 404,
+  "artemis_route_status": 403,
   "build_name": "main-CUHOTSwB.js",
-  "checked_at": "2026-09-11T17:53:41.595453",
+  "checked_at": "2026-09-11T18:06:04.974036",
   "main_sha256": "ed3f4b7d0967f1a33be3ac36659ba3cbcc3879ab0a28014a0cc432fc4169f342",
   "namespaces": [
     "account",
