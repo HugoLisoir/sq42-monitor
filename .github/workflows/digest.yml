@@ -1,0 +1,38 @@
+name: SQ42 Build Digest
+
+# Résumé d'activité de build : hebdomadaire, plus déclenchement manuel à la
+# demande (équivalent pratique d'une commande !sq42 builds).
+on:
+  schedule:
+    - cron: '0 9 * * 1'       # tous les lundis à 09:00 UTC
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Période à résumer (en jours)"
+        required: false
+        default: "7"
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Post build digest
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: python sq42_monitor.py --digest ${{ github.event.inputs.days || '7' }}
