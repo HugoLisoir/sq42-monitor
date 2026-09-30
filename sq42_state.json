@@ -40,11 +40,16 @@
       "build": "main-D9k4tWxK.js",
       "first_seen": "2026-09-30T17:53:22.699373",
       "sha256": "bf18dc15187ec0ce46c3803c722bcf57cc22c86af1bc5b6097437ebe129ca27c"
+    },
+    {
+      "build": "main-TkbJwa7n.js",
+      "first_seen": "2026-09-30T20:22:16.374687",
+      "sha256": "ce7b403411f53879021014e8fb68f2da316d7376e234c04a562551c649ab3947"
     }
   ],
-  "build_name": "main-D9k4tWxK.js",
-  "checked_at": "2026-09-30T19:58:23.322566",
-  "main_sha256": "bf18dc15187ec0ce46c3803c722bcf57cc22c86af1bc5b6097437ebe129ca27c",
+  "build_name": "main-TkbJwa7n.js",
+  "checked_at": "2026-09-30T20:22:16.374687",
+  "main_sha256": "ce7b403411f53879021014e8fb68f2da316d7376e234c04a562551c649ab3947",
   "namespaces": [
     "account",
     "accountDashboard",
@@ -84,31 +89,7 @@
     "subscriptionPage",
     "wishListPage"
   ],
-  "platform_fingerprints": [
-    "nintendo:0af3214d05ec318e",
-    "nintendo:9f023db71441f3e1",
-    "nintendo:a01514579ad3ee16",
-    "nintendo:b5ce3b3249aa70f5",
-    "playstation:1fac3fc9f4afda49",
-    "playstation:c5293c1b31588d88",
-    "playstation:d806a622af4c5ee7",
-    "playstation:fcf18a6637680de1",
-    "sony:42d14f3b0f5dae60",
-    "sony:674011eb567d21ad",
-    "sony:78aeba91db27151b",
-    "sony:d98dba59c2e08aa9",
-    "steam:3bcfc5bfa1aa1dbf",
-    "steam:6829e22e4f2fdd0a",
-    "xbox:0f0c07571be76fb1",
-    "xbox:1f948758990b3ef9",
-    "xbox:61bd3111ecfa7b85",
-    "xbox:89f4aac48b96d36b",
-    "xbox:bb23631d12601fd9",
-    "xbox:d85b754f0866a1cd",
-    "xbox:de5c7dfc09e166f1",
-    "xbox:e8567444f28d1db3",
-    "xbox:f71e37026276e0d9"
-  ],
+  "platform_fingerprints": [],
   "prefixes": [
     "Account",
     "Animation",
@@ -228,6 +209,7 @@
     "TySkuBrowseFragment",
     "TySkuCardWithExpressFragment",
     "TySkuCartFragment",
+    "TySkuExpressEligibilityFragment",
     "TySkuFragment",
     "TySkuFrequency",
     "TySkuGetSkusCardFragment",
@@ -237,7 +219,6 @@
     "TySkuSearchFragment",
     "TySkuShipSkuFragment",
     "TySkuUpgradeFragment",
-    "TySkuWithPriceExpressProductFragment",
     "TySkuWithPriceProductFragment",
     "TySkuWithoutParentProductFragment",
     "TyStock",
