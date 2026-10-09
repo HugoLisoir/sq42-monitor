@@ -110,11 +110,16 @@
       "build": "main-ClXGx4lj.js",
       "first_seen": "2026-10-09T12:34:52.205688",
       "sha256": "fc7ac8bc20aafb85b17e910a8e79f75a0f26e9113109665f63d26ce484d4db43"
+    },
+    {
+      "build": "main-DW6BL7vj.js",
+      "first_seen": "2026-10-09T17:19:03.851811",
+      "sha256": "2caaaeeef53f505d1c9f4036e8798b35979ecd689196458be83c3d82a9e04311"
     }
   ],
-  "build_name": "main-ClXGx4lj.js",
-  "checked_at": "2026-10-09T16:59:52.877282",
-  "main_sha256": "fc7ac8bc20aafb85b17e910a8e79f75a0f26e9113109665f63d26ce484d4db43",
+  "build_name": "main-DW6BL7vj.js",
+  "checked_at": "2026-10-09T17:19:03.851811",
+  "main_sha256": "2caaaeeef53f505d1c9f4036e8798b35979ecd689196458be83c3d82a9e04311",
   "namespaces": [
     "account",
     "accountDashboard",
@@ -296,7 +301,6 @@
     "TyStripeIntent",
     "TySubscriptions",
     "TyTicketInput",
-    "TyWL",
     "TyWalletType",
     "tycoon_addressBook_add",
     "tycoon_addressBook_edit",
