@@ -170,11 +170,16 @@
       "build": "main-Cm8hKwIP.js",
       "first_seen": "2026-10-21T14:22:20.123743",
       "sha256": "32edd1693259ab935604eadbe9a89efd847406e3ca7c80a74b600f3a2aca332c"
+    },
+    {
+      "build": "main-CvQ_0jO-.js",
+      "first_seen": "2026-10-21T18:55:09.202956",
+      "sha256": "65d8eb23fe46ae72b74117ceb2b861ea547e32d2acfa0a1ed6557a3247675748"
     }
   ],
-  "build_name": "main-Cm8hKwIP.js",
-  "checked_at": "2026-10-21T18:42:42.178387",
-  "main_sha256": "32edd1693259ab935604eadbe9a89efd847406e3ca7c80a74b600f3a2aca332c",
+  "build_name": "main-CvQ_0jO-.js",
+  "checked_at": "2026-10-21T18:55:09.202956",
+  "main_sha256": "65d8eb23fe46ae72b74117ceb2b861ea547e32d2acfa0a1ed6557a3247675748",
   "namespaces": [
     "account",
     "accountDashboard",
@@ -226,18 +231,15 @@
     "Callout",
     "Carousel",
     "Community",
-    "Data",
     "Download",
     "Enlist",
     "F",
     "Game",
     "Games",
-    "Head",
     "Holoviewer",
     "Interactive",
     "Marketing",
     "Media",
-    "Navigation",
     "New",
     "Orion",
     "Platform",
