@@ -165,11 +165,16 @@
       "build": "main-CcWQYKHu.js",
       "first_seen": "2026-10-19T18:25:41.232520",
       "sha256": "4ee31f49f7c18a9868e1251c87fb3a3a701d626bf7079e1fe261a23f3bf41689"
+    },
+    {
+      "build": "main-Cm8hKwIP.js",
+      "first_seen": "2026-10-21T14:22:20.123743",
+      "sha256": "32edd1693259ab935604eadbe9a89efd847406e3ca7c80a74b600f3a2aca332c"
     }
   ],
-  "build_name": "main-CcWQYKHu.js",
-  "checked_at": "2026-10-21T13:59:48.796566",
-  "main_sha256": "4ee31f49f7c18a9868e1251c87fb3a3a701d626bf7079e1fe261a23f3bf41689",
+  "build_name": "main-Cm8hKwIP.js",
+  "checked_at": "2026-10-21T14:22:20.123743",
+  "main_sha256": "32edd1693259ab935604eadbe9a89efd847406e3ca7c80a74b600f3a2aca332c",
   "namespaces": [
     "account",
     "accountDashboard",
@@ -215,6 +220,7 @@
     "Animation",
     "Artemis",
     "Atom",
+    "Authentication",
     "Background",
     "Badge",
     "Callout",
@@ -236,6 +242,7 @@
     "Orion",
     "Platform",
     "Play",
+    "Route",
     "Ship",
     "Ships",
     "Skin",
