@@ -240,11 +240,16 @@
       "build": "main-CKhCt861.js",
       "first_seen": "2026-10-29T18:57:00.560804",
       "sha256": "859819926c9db3ddac96677149e3c7b7e43e38073e1fcf7b7d0ba512d7f89a10"
+    },
+    {
+      "build": "main-C_cLxhkQ.js",
+      "first_seen": "2026-10-30T11:30:17.990119",
+      "sha256": "c85894aaafb5a9604c6a69091a18b9defb6e5ecacbb934339d7938f75efb5201"
     }
   ],
-  "build_name": "main-CKhCt861.js",
-  "checked_at": "2026-10-30T11:22:24.474083",
-  "main_sha256": "859819926c9db3ddac96677149e3c7b7e43e38073e1fcf7b7d0ba512d7f89a10",
+  "build_name": "main-C_cLxhkQ.js",
+  "checked_at": "2026-10-30T11:30:17.990119",
+  "main_sha256": "c85894aaafb5a9604c6a69091a18b9defb6e5ecacbb934339d7938f75efb5201",
   "namespaces": [
     "account",
     "accountDashboard",
@@ -385,6 +390,9 @@
     "TyItemMediaFragment",
     "TyLedger",
     "TyOrder",
+    "TyOrderGiftOptions",
+    "TyOrderGiftOptionsInput",
+    "TyOrderGiftSendMethod",
     "TyOrderLineItemFragment",
     "TyOrderPaymentState",
     "TyOrderQueries",
@@ -425,7 +433,6 @@
     "TyStripeIntent",
     "TySubscriptions",
     "TyTicketInput",
-    "TyUoe",
     "TyWalletType",
     "tycoon_addressBook_add",
     "tycoon_addressBook_edit",
@@ -435,6 +442,8 @@
     "tycoon_context_setCurrency",
     "tycoon_expressCart_",
     "tycoon_expressCart_clear",
+    "tycoon_expressCart_clearGiftOptions",
+    "tycoon_expressCart_setGiftOptions",
     "tycoon_expressCart_setItem",
     "tycoon_expressCheckout_card",
     "tycoon_expressCheckout_clearRecovery",
@@ -447,6 +456,7 @@
     "tycoon_order_sendAdyenPayment",
     "tycoon_order_setPaymentCaptured",
     "tycoon_order_setPaymentMethod",
+    "tycoon_redeem_claim",
     "tycoon_stripe_remove_card"
   ]
 }
