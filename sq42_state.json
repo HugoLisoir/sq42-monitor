@@ -280,11 +280,16 @@
       "build": "main-Cn_LUOlq.js",
       "first_seen": "2026-11-03T16:40:12.375432",
       "sha256": "6caad2024a377e82d72a0d01dca9ca921fe2a031ea1012b4d69077a8231046f6"
+    },
+    {
+      "build": "main-giwBEMda.js",
+      "first_seen": "2026-11-03T19:15:29.887553",
+      "sha256": "98e8669d4d8a1140046b693fa2d8e4ba1432dbd84bb86bac73b6f48e39c49d9f"
     }
   ],
-  "build_name": "main-Cn_LUOlq.js",
-  "checked_at": "2026-11-03T19:07:12.116475",
-  "main_sha256": "6caad2024a377e82d72a0d01dca9ca921fe2a031ea1012b4d69077a8231046f6",
+  "build_name": "main-giwBEMda.js",
+  "checked_at": "2026-11-03T19:15:29.887553",
+  "main_sha256": "98e8669d4d8a1140046b693fa2d8e4ba1432dbd84bb86bac73b6f48e39c49d9f",
   "namespaces": [
     "account",
     "accountDashboard",
