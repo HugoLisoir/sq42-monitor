@@ -1,5 +1,5 @@
 {
-  "artemis_route_status": 404,
+  "artemis_route_status": 403,
   "build_history": [
     {
       "build": "main-CAC3MW6M.js",
@@ -303,7 +303,7 @@
     }
   ],
   "build_name": "main-BPPdl69o.js",
-  "checked_at": "2026-11-06T02:58:56.798324",
+  "checked_at": "2026-11-06T03:15:34.901865",
   "main_sha256": "9901c263870330a4590ab7750bacf0a4e52951b8e82ea58484233934185ec302",
   "namespaces": [
     "account",
