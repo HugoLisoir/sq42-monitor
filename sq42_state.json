@@ -315,11 +315,16 @@
       "build": "main-nny6ew37.js",
       "first_seen": "2026-11-11T15:52:49.010961",
       "sha256": "15beeb1b5a8fee35453e509dea6b9565873d1b6d4edfa6a109e3a830bc56ce72"
+    },
+    {
+      "build": "main-EbWPE0vp.js",
+      "first_seen": "2026-11-11T18:39:07.725829",
+      "sha256": "af44a5e02864ecd790debc27df2c276dcd05ecfa5dfab55b0fb163df32fb5e8c"
     }
   ],
-  "build_name": "main-nny6ew37.js",
-  "checked_at": "2026-11-11T18:31:25.364761",
-  "main_sha256": "15beeb1b5a8fee35453e509dea6b9565873d1b6d4edfa6a109e3a830bc56ce72",
+  "build_name": "main-EbWPE0vp.js",
+  "checked_at": "2026-11-11T18:39:07.725829",
+  "main_sha256": "af44a5e02864ecd790debc27df2c276dcd05ecfa5dfab55b0fb163df32fb5e8c",
   "namespaces": [
     "account",
     "accountDashboard",
@@ -359,7 +364,9 @@
     "subscriptionPage",
     "wishListPage"
   ],
-  "platform_fingerprints": [],
+  "platform_fingerprints": [
+    "psn:3d27abf738567f3b"
+  ],
   "prefixes": [
     "Account",
     "Animation",
