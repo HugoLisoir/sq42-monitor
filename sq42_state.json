@@ -320,11 +320,16 @@
       "build": "main-EbWPE0vp.js",
       "first_seen": "2026-11-11T18:39:07.725829",
       "sha256": "af44a5e02864ecd790debc27df2c276dcd05ecfa5dfab55b0fb163df32fb5e8c"
+    },
+    {
+      "build": "main-BUR9QyrQ.js",
+      "first_seen": "2026-11-12T18:25:27.053858",
+      "sha256": "1a133c46d69242e73d165d5b29491b82f25a3b45baf2c54706c7bc18f01453ab"
     }
   ],
-  "build_name": "main-EbWPE0vp.js",
-  "checked_at": "2026-11-12T18:15:39.698232",
-  "main_sha256": "af44a5e02864ecd790debc27df2c276dcd05ecfa5dfab55b0fb163df32fb5e8c",
+  "build_name": "main-BUR9QyrQ.js",
+  "checked_at": "2026-11-12T18:25:27.053858",
+  "main_sha256": "1a133c46d69242e73d165d5b29491b82f25a3b45baf2c54706c7bc18f01453ab",
   "namespaces": [
     "account",
     "accountDashboard",
@@ -364,9 +369,7 @@
     "subscriptionPage",
     "wishListPage"
   ],
-  "platform_fingerprints": [
-    "psn:3d27abf738567f3b"
-  ],
+  "platform_fingerprints": [],
   "prefixes": [
     "Account",
     "Animation",
