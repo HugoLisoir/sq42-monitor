@@ -1,5 +1,5 @@
 {
-  "artemis_route_status": 403,
+  "artemis_route_status": 404,
   "build_history": [
     {
       "build": "main-CAC3MW6M.js",
@@ -323,7 +323,7 @@
     }
   ],
   "build_name": "main-EbWPE0vp.js",
-  "checked_at": "2026-11-12T07:55:26.768304",
+  "checked_at": "2026-11-12T08:12:02.335906",
   "main_sha256": "af44a5e02864ecd790debc27df2c276dcd05ecfa5dfab55b0fb163df32fb5e8c",
   "namespaces": [
     "account",
