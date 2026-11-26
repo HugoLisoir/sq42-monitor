@@ -370,11 +370,16 @@
       "build": "main-suaoqWu5.js",
       "first_seen": "2026-11-24T20:52:56.716296",
       "sha256": "3c242ecbf4acee3baf75a09232235c513649d96eb432069ea48283f9a52891a7"
+    },
+    {
+      "build": "main-Cu5hHtQ5.js",
+      "first_seen": "2026-11-26T18:36:20.914464",
+      "sha256": "141e16224610a8516763227cc8247f6969b5b59a01762e6dd0750a67db299e17"
     }
   ],
-  "build_name": "main-suaoqWu5.js",
-  "checked_at": "2026-11-26T18:27:11.429648",
-  "main_sha256": "fc8f371c1c00690c7551948f1f56d7230e0dcad05e78d6542dd1be91fb6562f9",
+  "build_name": "main-Cu5hHtQ5.js",
+  "checked_at": "2026-11-26T18:36:20.914464",
+  "main_sha256": "141e16224610a8516763227cc8247f6969b5b59a01762e6dd0750a67db299e17",
   "namespaces": [
     "account",
     "accountDashboard",
@@ -414,9 +419,7 @@
     "subscriptionPage",
     "wishListPage"
   ],
-  "platform_fingerprints": [
-    "psn:f361dda6e252dbfc"
-  ],
+  "platform_fingerprints": [],
   "prefixes": [
     "Account",
     "Animation",
